@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rhyme Finder</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 60px auto; text-align: center; }
+    input { font-size: 1.2rem; padding: 8px; }
+    button { font-size: 1.2rem; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <h1>Rhyme Finder</h1>
+  <p>Type a word to find rhymes.</p>
+  <input id="wordInput" type="text" placeholder="Enter a word" />
+  <button onclick="findRhymes()">Find Rhymes</button>
+  <div id="results"></div>
+
+  <script>
+    function findRhymes() {
+      const val = document.getElementById('wordInput').value;
+      document.getElementById('results').innerText = "Rhymes for: " + val;
+      // Nothing here yet — build me! Could use a hardcoded list or a free rhyme API.
+    }
+  </script>
+</body>
+</html>
