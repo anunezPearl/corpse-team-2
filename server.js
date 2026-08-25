@@ -13,6 +13,9 @@ loadEnv(path.join(__dirname,'.env'));
 
 const PORT=Number(process.env.PORT)||3000;
 const vowels=new Set(['a','e','i','o','u']);
+const bandAdjectives=['Chromatic','Electric','Velvet','Neon','Cosmic','Midnight','Glitter','Turbo'];
+const bandNouns=['Pancakes','Comets','Bananas','Kazoos','Jellybeans','Moonbeams','Waffles','Trombones'];
+const youtubeSearches=['otters juggling', 'tiny train through snow', 'synthwave cooking show', 'moonwalk tutorial', 'goats in sweaters', 'underwater disco'];
 function sendJson(response,status,data){ response.writeHead(status,{'Content-Type':'application/json; charset=utf-8'}); response.end(JSON.stringify(data)); }
 async function readJson(request){
   let body='';
@@ -21,26 +24,26 @@ async function readJson(request){
 }
 
 async function makeRhyme(word){
-  const baseUrl=process.env.LITELLM_BASE_URL?.replace(/\/$/,'');
-  const apiKey=process.env.LITELLM_API_KEY;
-  if(!baseUrl||!apiKey) throw new Error('LiteLLM is not configured.');
-  const llmResponse=await fetch(`${baseUrl}/chat/completions`,{
-    method:'POST',
-    headers:{Authorization:`Bearer ${apiKey}`,'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'openai/gpt-4.1-mini-2025-04-14',temperature:.9,max_tokens:120,
-      response_format:{type:'json_object'},
-      messages:[
-        {role:'system',content:'You are a playful, savage rhyme writer with the worst possible taste in wordplay. Return only JSON with exactly two string fields: rhyme and lyric. The rhyme must be a real word that rhymes with the user word, but pick the cheesiest, most forced, dad-joke-tier rhyme option available rather than the most natural one. The lyric must be one short, original song lyric about a bot named Pearl that playfully roasts/insults the user in a witty, over-the-top, good-natured way (think friendly roast-battle, not cruel or hateful) while leaning hard into cringe: corny puns, awkward forced rhythm, cheesy exclamations, and an overly dramatic delivery, and must naturally use both the user word and the rhyme word. Keep it family-friendly: no slurs, no references to protected characteristics, no genuinely hurtful content.'},
-        {role:'user',content:`Word: ${word}`}
-      ]
-    })
-  });
-  if(!llmResponse.ok) throw new Error(`LiteLLM returned ${llmResponse.status}.`);
-  const completion=await llmResponse.json();
-  const result=JSON.parse(completion.choices?.[0]?.message?.content||'{}');
-  if(typeof result.rhyme!=='string'||typeof result.lyric!=='string') throw new Error('Unexpected LiteLLM response.');
-  return {rhyme:result.rhyme.trim(),lyric:result.lyric.trim()};
+  const query=new URLSearchParams({rel_rhy:word,max:'50'});
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),5000);
+  try{
+    const rhymeResponse=await fetch(`https://api.datamuse.com/words?${query}`,{signal:controller.signal});
+    if(!rhymeResponse.ok) throw new Error(`Rhyme service returned ${rhymeResponse.status}.`);
+    const matches=await rhymeResponse.json();
+    const rhyme=matches.find(match=>
+      typeof match.word==='string'&&
+      match.word.toLowerCase()!==word.toLowerCase()&&
+      /^[a-z]+(?:[ '-][a-z]+)*$/i.test(match.word)
+    )?.word;
+    if(!rhyme) throw new Error('No rhyme found.');
+    const bandName=`The ${bandAdjectives[Math.floor(Math.random()*bandAdjectives.length)]} ${bandNouns[Math.floor(Math.random()*bandNouns.length)]}`;
+    const youtubeSearch=youtubeSearches[Math.floor(Math.random()*youtubeSearches.length)];
+    const youtubeUrl=`https://www.youtube.com/results?${new URLSearchParams({search_query:youtubeSearch})}`;
+    return {rhyme,lyric:`Pearl paired ${word} with ${rhyme}; your flow needs a tune-up, but she calls it a chart-topper!`,bandName,youtubeUrl};
+  }finally{
+    clearTimeout(timeout);
+  }
 }
 
 http.createServer(async(request,response)=>{

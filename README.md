@@ -1,31 +1,17 @@
 # Team 2: Pearl's Rhyme Machine
 
-Pearl's Rhyme Machine is a playful AI-powered rhyme finder. Enter a word and
-the app responds according to its final letter:
+Pearl's Rhyme Machine is a self-contained browser toy that turns a word into a
+tiny, gloriously corny song moment.
 
-- **Consonant:** Pearl asks LiteLLM for a real, cheesy dad-joke-tier rhyme and
-  writes a short, original song lyric about Pearl the bot that playfully
-  roasts the user, using both the input and its rhyme.
-- **Vowel:** Pearl skips the rhyme and responds with `💩`.
+- Words ending in a **consonant** are looked up with Datamuse's phonetic rhyme
+  API. Pearl returns a real rhyme, a playful original lyric, and a
+  procedurally generated group name such as "The Velvet Waffles."
+- Each result also includes a completely unrelated surprise YouTube search,
+  because the soundtrack should keep everyone guessing.
+- Words ending in a **vowel** get `💩` instead of a rhyme.
 
-The responsive single-page interface is served by a small Node.js server. The
-server validates requests and makes the LiteLLM call, keeping the API key out
-of browser code. No third-party packages or build step are required.
+## Use It
 
-## Run it
-
-Copy `.env.example` to `.env` and add a valid LiteLLM key, then run:
-
-```sh
-npm start
-```
-
-Open <http://localhost:3000>. The API key stays on the server and is never sent to the browser.
-
-## Configuration
-
-The server reads:
-
-- `LITELLM_BASE_URL` — the LiteLLM proxy URL
-- `LITELLM_API_KEY` — the API key sent to the proxy
-- `PORT` — optional local port; defaults to `3000`
+Open `index.html` directly in a modern browser. There is no build step, Node
+process, API key, or separate server to run. An internet connection is needed
+only to look up rhymes through Datamuse and to open the optional YouTube link.
