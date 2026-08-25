@@ -19,8 +19,8 @@
     button:hover { transform:translateY(-1px); } button:disabled { opacity:.65; cursor:wait; transform:none; }
     #results { min-height:118px; margin-top:24px; padding:22px; display:grid; place-items:center; border:2px dashed var(--line); border-radius:20px; }
     #results.empty { color:var(--muted); } #results.answer { background:#fbf9ff; border-style:solid; } #results.poop { font-size:4.5rem; background:#fff7e9; border-style:solid; }
-    .rhyme { margin:0 0 12px; color:var(--muted); } .rhyme strong { color:var(--purple); font-size:1.35rem; }
-    blockquote { margin:0; font-size:1.25rem; font-weight:700; line-height:1.45; } .error { color:#a52e58 !important; }
+    .rhyme { margin:0 0 12px; color:var(--muted); } .rhyme strong { color:var(--purple); font-size:1.35rem; } .artist { margin:0 0 10px; color:var(--muted); font-size:.95rem; font-weight:750; }
+    blockquote { margin:0; font-size:1.25rem; font-weight:700; line-height:1.45; } .youtube { display:inline-block; margin-top:16px; color:var(--purple); font-weight:750; } .error { color:#a52e58 !important; }
     @media (max-width:520px) { form { flex-direction:column; } button { width:100%; } }
   </style>
 </head>
@@ -41,7 +41,29 @@
     const button=document.querySelector('#submitButton');
     const results=document.querySelector('#results');
     const lastLetter=word=>word.toLowerCase().match(/[a-z]$/)?.[0]||'';
-
+    const bandAdjectives=['Chromatic','Electric','Velvet','Neon','Cosmic','Midnight','Glitter','Turbo'];
+    const bandNouns=['Pancakes','Comets','Bananas','Kazoos','Jellybeans','Moonbeams','Waffles','Trombones'];
+    const youtubeSearches=['otters juggling','tiny train through snow','synthwave cooking show','moonwalk tutorial','goats in sweaters','underwater disco'];
+    const randomItem=items=>items[Math.floor(Math.random()*items.length)];
+    async function makeFallbackRhyme(word){
+      const query=new URLSearchParams({rel_rhy:word,max:'50'});
+      const response=await fetch(`https://api.datamuse.com/words?${query}`);
+      if(!response.ok) throw new Error('Pearl could not find a rhyme right now.');
+      const matches=await response.json();
+      const rhyme=matches.find(match=>
+        typeof match.word==='string'&&
+        match.word.toLowerCase()!==word.toLowerCase()&&
+        /^[a-z]+(?:[ '-][a-z]+)*$/i.test(match.word)
+      )?.word;
+      if(!rhyme) throw new Error('Pearl could not find a rhyme for that word.');
+      const youtubeUrl=`https://www.youtube.com/results?${new URLSearchParams({search_query:randomItem(youtubeSearches)})}`;
+      return {
+        rhyme,
+        lyric:`Pearl paired ${word} with ${rhyme}; your flow needs a tune-up, but she calls it a chart-topper!`,
+        bandName:`The ${randomItem(bandAdjectives)} ${randomItem(bandNouns)}`,
+        youtubeUrl
+      };
+    }
     form.addEventListener('submit',async event=>{
       event.preventDefault();
       const word=input.value.trim();
@@ -52,15 +74,15 @@
       button.disabled=true; button.textContent='Pearl is writing…';
       results.className='empty'; results.textContent='Finding Pearl’s flow…';
       try{
-        const response=await fetch('/api/rhyme',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({word})});
-        const data=await response.json();
-        if(!response.ok) throw new Error(data.error||'Pearl lost the beat.');
+        const data=await makeFallbackRhyme(word);
         results.className='answer'; results.replaceChildren();
         const wrapper=document.createElement('div');
         const rhyme=document.createElement('p'); rhyme.className='rhyme'; rhyme.append(`A rhyme for “${word}”: `);
         const strong=document.createElement('strong'); strong.textContent=data.rhyme; rhyme.append(strong);
+        const artist=document.createElement('p'); artist.className='artist'; artist.textContent=`Performed by ${data.bandName}`;
         const lyric=document.createElement('blockquote'); lyric.textContent=`“${data.lyric}”`;
-        wrapper.append(rhyme,lyric); results.append(wrapper);
+        const youtube=document.createElement('a'); youtube.className='youtube'; youtube.href=data.youtubeUrl; youtube.target='_blank'; youtube.rel='noopener noreferrer'; youtube.textContent='Find Pearl’s YouTube soundtrack';
+        wrapper.append(rhyme,artist,lyric,youtube); results.append(wrapper);
       }catch(error){ results.className='empty error'; results.textContent=error.message; }
       finally{ button.disabled=false; button.textContent='Make it rhyme'; }
     });
