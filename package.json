@@ -1,0 +1,7 @@
+{
+  "name": "pearls-rhyme-machine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A playful AI-powered rhyme finder starring Pearl the bot.",
+  "scripts": { "start": "node server.js" }
+}

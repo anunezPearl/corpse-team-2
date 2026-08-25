@@ -1,26 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Rhyme Finder</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pearl's Rhyme Machine</title>
   <style>
-    body { font-family: sans-serif; max-width: 500px; margin: 60px auto; text-align: center; }
-    input { font-size: 1.2rem; padding: 8px; }
-    button { font-size: 1.2rem; padding: 8px 16px; }
+    :root { color-scheme: light; --ink:#201938; --muted:#6e6681; --purple:#7255d9; --pink:#f15e9d; --line:#ded5ef; }
+    * { box-sizing: border-box; }
+    body { min-height:100vh; margin:0; padding:28px 18px; display:grid; place-items:center; font-family:Inter,ui-rounded,system-ui,sans-serif; color:var(--ink); background:radial-gradient(circle at 15% 15%,#ffd8e7 0,transparent 32%),radial-gradient(circle at 85% 80%,#dcd4ff 0,transparent 34%),#f7f3ff; }
+    main { width:min(620px,100%); padding:clamp(28px,6vw,54px); text-align:center; background:rgba(255,255,255,.9); border:1px solid #fff; border-radius:30px; box-shadow:0 24px 70px rgba(65,44,102,.16); backdrop-filter:blur(14px); }
+    .pearl { width:72px; height:72px; margin:0 auto 18px; display:grid; place-items:center; font-size:36px; background:linear-gradient(145deg,#fff,#eadfff); border:2px solid #fff; border-radius:50%; box-shadow:0 10px 25px rgba(114,85,217,.2); }
+    h1 { margin:0; font-size:clamp(2rem,8vw,3.4rem); letter-spacing:-.055em; } h1 span { color:var(--purple); }
+    .intro { margin:12px auto 28px; color:var(--muted); line-height:1.55; }
+    form { display:flex; gap:10px; } input,button { font:inherit; }
+    input { min-width:0; flex:1; padding:15px 18px; color:var(--ink); background:#fffaf4; border:2px solid var(--line); border-radius:15px; outline:none; }
+    input:focus { border-color:var(--purple); box-shadow:0 0 0 4px #e8e2ff; }
+    button { padding:15px 22px; font-weight:750; color:#fff; background:linear-gradient(135deg,var(--purple),var(--pink)); border:0; border-radius:15px; cursor:pointer; box-shadow:0 8px 18px rgba(114,85,217,.25); }
+    button:hover { transform:translateY(-1px); } button:disabled { opacity:.65; cursor:wait; transform:none; }
+    #results { min-height:118px; margin-top:24px; padding:22px; display:grid; place-items:center; border:2px dashed var(--line); border-radius:20px; }
+    #results.empty { color:var(--muted); } #results.answer { background:#fbf9ff; border-style:solid; } #results.poop { font-size:4.5rem; background:#fff7e9; border-style:solid; }
+    .rhyme { margin:0 0 12px; color:var(--muted); } .rhyme strong { color:var(--purple); font-size:1.35rem; }
+    blockquote { margin:0; font-size:1.25rem; font-weight:700; line-height:1.45; } .error { color:#a52e58 !important; }
+    @media (max-width:520px) { form { flex-direction:column; } button { width:100%; } }
   </style>
 </head>
 <body>
-  <h1>Rhyme Finder</h1>
-  <p>Type a word to find rhymes.</p>
-  <input id="wordInput" type="text" placeholder="Enter a word" />
-  <button onclick="findRhymes()">Find Rhymes</button>
-  <div id="results"></div>
-
+  <main>
+    <div class="pearl" aria-hidden="true">🤖</div>
+    <h1><span>Pearl's</span> Rhyme Machine</h1>
+    <p class="intro">Give Pearl a word. Consonants get a rhyme and a tiny original song lyric. Vowels get… something else.</p>
+    <form id="rhymeForm">
+      <input id="wordInput" type="text" placeholder="Try “bright”" autocomplete="off" aria-label="Word to rhyme" required>
+      <button id="submitButton" type="submit">Make it rhyme</button>
+    </form>
+    <section id="results" class="empty" aria-live="polite">Pearl is listening 🎧</section>
+  </main>
   <script>
-    function findRhymes() {
-      const val = document.getElementById('wordInput').value;
-      document.getElementById('results').innerText = "Rhymes for: " + val;
-      // Nothing here yet — build me! Could use a hardcoded list or a free rhyme API.
-    }
+    const form=document.querySelector('#rhymeForm');
+    const input=document.querySelector('#wordInput');
+    const button=document.querySelector('#submitButton');
+    const results=document.querySelector('#results');
+    const lastLetter=word=>word.toLowerCase().match(/[a-z]$/)?.[0]||'';
+
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const word=input.value.trim();
+      const ending=lastLetter(word);
+      if(!ending){ results.className='empty error'; results.textContent='Please enter a word that ends with a letter.'; return; }
+      if('aeiou'.includes(ending)){ results.className='poop'; results.textContent='💩'; return; }
+
+      button.disabled=true; button.textContent='Pearl is writing…';
+      results.className='empty'; results.textContent='Finding Pearl’s flow…';
+      try{
+        const response=await fetch('/api/rhyme',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({word})});
+        const data=await response.json();
+        if(!response.ok) throw new Error(data.error||'Pearl lost the beat.');
+        results.className='answer'; results.replaceChildren();
+        const wrapper=document.createElement('div');
+        const rhyme=document.createElement('p'); rhyme.className='rhyme'; rhyme.append(`A rhyme for “${word}”: `);
+        const strong=document.createElement('strong'); strong.textContent=data.rhyme; rhyme.append(strong);
+        const lyric=document.createElement('blockquote'); lyric.textContent=`“${data.lyric}”`;
+        wrapper.append(rhyme,lyric); results.append(wrapper);
+      }catch(error){ results.className='empty error'; results.textContent=error.message; }
+      finally{ button.disabled=false; button.textContent='Make it rhyme'; }
+    });
   </script>
 </body>
 </html>
