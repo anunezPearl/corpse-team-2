@@ -3,8 +3,9 @@
 Pearl's Rhyme Machine is a playful AI-powered rhyme finder. Enter a word and
 the app responds according to its final letter:
 
-- **Consonant:** Pearl asks LiteLLM for a real rhyme and writes a short,
-  original song lyric about Pearl the bot using both the input and its rhyme.
+- **Consonant:** Pearl asks LiteLLM for a real, cheesy dad-joke-tier rhyme and
+  writes a short, original song lyric about Pearl the bot that playfully
+  roasts the user, using both the input and its rhyme.
 - **Vowel:** Pearl skips the rhyme and responds with `💩`.
 
 The responsive single-page interface is served by a small Node.js server. The

@@ -31,7 +31,7 @@ async function makeRhyme(word){
       model:'openai/gpt-4.1-mini-2025-04-14',temperature:.9,max_tokens:120,
       response_format:{type:'json_object'},
       messages:[
-        {role:'system',content:'You are a playful rhyme writer. Return only JSON with exactly two string fields: rhyme and lyric. The rhyme must be a real word that rhymes with the user word. The lyric must be one short, original, family-friendly song lyric about a bot named Pearl, and must naturally use both the user word and the rhyme word.'},
+        {role:'system',content:'You are a playful, savage rhyme writer with the worst possible taste in wordplay. Return only JSON with exactly two string fields: rhyme and lyric. The rhyme must be a real word that rhymes with the user word, but pick the cheesiest, most forced, dad-joke-tier rhyme option available rather than the most natural one. The lyric must be one short, original song lyric about a bot named Pearl that playfully roasts/insults the user in a witty, over-the-top, good-natured way (think friendly roast-battle, not cruel or hateful) while leaning hard into cringe: corny puns, awkward forced rhythm, cheesy exclamations, and an overly dramatic delivery, and must naturally use both the user word and the rhyme word. Keep it family-friendly: no slurs, no references to protected characteristics, no genuinely hurtful content.'},
         {role:'user',content:`Word: ${word}`}
       ]
     })
